@@ -1,89 +1,87 @@
-from fileinput import input as filein
-
-# from sys import stdin, stdout
-
-
-# instantiate the tape
-class machine:
-    def __init__(self):
-        self.head = 0
-        self.tape = [0] * 30_000
-
-    # TODO should turing machine wrap-around? how about an infinite tape off to the right, but no moving further left than tile 0
-    # TODO take input as a string and parse into a buffer represented as an array of chars (whose value is modulo'd to keep in UTF range). Additional inputs can be parsed and (added onto? replace?) the current buffer stack.
-    # eg:
-    #   buffer = [char for char in stdin.readline().strip("\n")]
-    #       maybe buffer = [ord(char) for char in ^^^]
-    #   ord(buffer.pop(0))  # FIFO
-
-    def inc(self):
-        self.tape[self.head] += 1 % 0b11111111
-
-    def dec(self):
-        self.tape[self.head] -= 1 % 0b11111111
-
-    def mvr(self):
-        self.head += 1 % len(self.tape)
-
-    def mvl(self):
-        self.head -= 1 % len(self.tape)
-
-    def show(self):
-        print(chr(self.tape[self.head] % 0x10FFFF))
-
-    def read(self):
-        self.tape[self.head] = ord(input("In: ")[0]) % 0x10FFFF
-
-
-def parse():
-    raw_input = [char for line in filein() for char in line]
-    program = []
-    for char in raw_input:
-        if char in ["+", "-", ">", "<", ",", ".", "[", "]"]:
-            program.append(char)
-    return program
-
-
-def interpret(program):
-    M = machine()
-    index = 0
-    loop_index = []
-
-    while index < len(program):
-        char = program[index]
-        if char == "+":
-            M.inc()
-        if char == "-":
-            M.dec()
-        if char == ">":
-            M.mvr()
-        if char == "<":
-            M.mvl()
-        if char == ".":
-            M.show()
-        if char == ",":
-            M.read()
-        if char == "[":
-            loop_index.append(index)
-        if char == "]":
-            if len(loop_index) > 0:
-                if M.tape[M.head] == 0:
-                    loop_index.pop()
-                else:
-                    index = loop_index[-1]
-            else:
-                # no matching [ implied
-                print(f"ERROR: mismatching ], command #{index}")
-        if char == "#":
-            # special debugger symbol in some implementations
-            print(f"{M.tape[:10]} {M.head}")
-        index += 1
+#!/usr/bin/env python3
+from sys import argv, stdin, stdout, exit
 
 
 def main():
-    interpret(parse())
+    # Turing Machine
+    cell = [0] * 30_000  # array of cells (the tape)
+    head = 0  # current cell (the head)
+
+    # read program from input file, handling bad input
+    try:
+        with open(argv[1], "r") as f:
+            # remember only valid BF commands as program commands
+            program = []
+            for char in f.read():
+                if char in ["+", "-", "<", ">", ",", ".", "[", "]", "#"]:
+                    program.append(char)
+    except IndexError:
+        exit("no file was provided!")
+    except FileNotFoundError:
+        exit(f"file '{argv[1]}' could not be found!")
+
+    # look ahead for syntax errors and bracket indices
+    # TODO better variable names
+    opening_indices = []
+    closing_bracket = {}
+    for index, char in enumerate(program):
+        if char == "[":
+            opening_indices.append(index)
+        elif char == "]":
+            if len(opening_indices) == 0:
+                exit(f"ERR: orphan ']' (command {index+1})!")
+            closing_bracket[opening_indices.pop()] = index
+    if len(opening_indices) > 0:
+        exit(f"ERR: orphan '[' (command {opening_indices.pop()+1})!")
+    opening_bracket = {v: k for k, v in closing_bracket.items()}
+
+    # run the program
+    index = 0  # the index of the current command in the program
+    while index < len(program):
+        # grab current command in program
+        command = program[index]
+
+        # execute the current command in the program
+        if command == "[":
+            # move ahead to nearest ] if value in cell is 0
+            if cell[head] == 0:
+                index = closing_bracket[index]
+        elif command == "]":
+            # move back to nearest [ if value in cell is not 0
+            if cell[head] != 0:
+                index = opening_bracket[index]
+        elif command == "+":
+            # increment value of cell at head (wrap overflow)
+            cell[head] = (cell[head] + 1) % 256
+        elif command == "-":
+            # decrement value of cell at head (wrap underflow)
+            cell[head] = (cell[head] - 1) % 256
+        elif command == ">":
+            # move head to next right cell, creating new cells if necessary
+            head += 1
+            if head > len(cell):
+                cell.append(0)
+        elif command == "<":
+            # move head to next left cell, do nothing it already at leftmost
+            head -= 1
+            if head < 0:
+                head = 0
+        elif command == ",":
+            # read 1 byte of input into current cell (as ordinal)
+            line = stdin.readline()
+            if len(line) == 0:
+                exit(0)
+            cell[head] = ord(line[0]) % 256
+        elif command == ".":
+            # write 1 byte of output from current cell (as char)
+            stdout.write(chr(cell[head]))
+        elif command == "#":
+            # debug: show state of FSM
+            print(f"{head} {cell[:10]}")
+
+        # move to next command in sequence
+        index += 1
 
 
-main()
-
-# maybe repeat by pushing every char for a range into a list, and then parsing that list repeatedly until the value of the tape at the head is 0 at the end of that list
+if __name__ == "__main__":
+    main()  # 55 sloc for the whole interpreter
