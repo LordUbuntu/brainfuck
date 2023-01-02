@@ -1,20 +1,22 @@
 #!/bin/python3.9
 from sys import argv, stdin, stdout, exit
+from operator import contains
+from functools import partial
 
 
 def main():
     # Turing Machine Emulator
     cell = [0] * 30_000  # array of cells (the tape)
     head = 0  # current cell (the head)
+    # BF symbols
+    bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
 
     # read program from given file
     try:
         with open(argv[1], "r") as file:
-            # filter file for recognized BF operations
-            program = []
-            for char in file.read():
-                if char in ["+", "-", "<", ">", ",", ".", "[", "]", "#"]:
-                    program.append(char)
+            # filter file for recognized BF commands
+            bf_program_filter = partial(contains, bf_commands)
+            program = list(filter(bf_program_filter, file.read()))
     # handle potential exceptions
     except IndexError:
         exit("no file was provided!")
