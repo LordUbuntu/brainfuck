@@ -3,25 +3,26 @@ from sys import argv, stdin, stdout, exit
 
 
 def main():
-    # Turing Machine
+    # Turing Machine Emulator
     cell = [0] * 30_000  # array of cells (the tape)
     head = 0  # current cell (the head)
 
-    # read program from input file, handling bad input
+    # read program from given file
     try:
-        with open(argv[1], "r") as f:
-            # remember only valid BF commands as program commands
+        with open(argv[1], "r") as file:
+            # filter file for recognized BF operations
             program = []
-            for char in f.read():
+            for char in file.read():
                 if char in ["+", "-", "<", ">", ",", ".", "[", "]", "#"]:
                     program.append(char)
+    # handle potential exceptions
     except IndexError:
         exit("no file was provided!")
     except FileNotFoundError:
         exit(f"file '{argv[1]}' could not be found!")
 
-    # look ahead for syntax errors and bracket indices
-    # TODO better variable names
+    # validate the program by ensuring no unmatched brackets
+    bracket_value = lambda char: 1 if char == '[' else -1 if char == ']' else 0
     opening_indices = []
     closing_bracket = {}
     for index, char in enumerate(program):
