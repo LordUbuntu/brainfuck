@@ -24,6 +24,10 @@ def main():
         exit(f"file '{argv[1]}' could not be found!")
 
     # validate the program by ensuring no unmatched brackets
+    bracket_symmetry = program.count('[') - program.count(']')
+    if program.count('[') - program.count('[') != 0:
+        exit("ERR: unmatched '[' or ']' in program")
+
     # and record positions of opening and closing brackets
     opening_indices = []
     closing_bracket = {}
