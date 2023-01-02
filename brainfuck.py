@@ -22,19 +22,11 @@ def main():
         exit(f"file '{argv[1]}' could not be found!")
 
     # validate the program by ensuring no unmatched brackets
-    bracket_value = lambda char: 1 if char == '[' else -1 if char == ']' else 0
-    opening_indices = []
-    closing_bracket = {}
-    for index, char in enumerate(program):
-        if char == "[":
-            opening_indices.append(index)
-        elif char == "]":
-            if len(opening_indices) == 0:
-                exit(f"ERR: orphan ']' (command {index+1})!")
-            closing_bracket[opening_indices.pop()] = index
-    if len(opening_indices) > 0:
-        exit(f"ERR: orphan '[' (command {opening_indices.pop()+1})!")
-    opening_bracket = {v: k for k, v in closing_bracket.items()}
+    brackets = program.count('[') - program.count(']')
+    if brackets > 0:
+        exit("ERR: orphan '['")
+    if brackets < 0:
+        exit("ERR: orphan ']'")
 
     # run the program
     index = 0  # the index of the current command in the program
