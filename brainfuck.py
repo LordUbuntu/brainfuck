@@ -93,17 +93,17 @@ def main():
                 skip = 0
                 continue
         elif command == "[":
-            # move ahead to command after matching ] if value in cell is 0
-            if cell[head] == 0:
+            # move ahead to command after matching ] if value in tape is 0
+            if tape[head] == 0:
                 skip = 1
                 continue  # keeping index on the calling [
-            # otherwise ignore the [ if value in cell is not 0
+            # otherwise ignore the [ if value in tape is not 0
         elif command == "]":
-            # move back to command after matching [ if value in cell is not 0
-            if cell[head] != 0:
+            # move back to command after matching [ if value in tape is not 0
+            if tape[head] != 0:
                 skip = -1
                 continue  # keeping index on the calling ]
-            # otherwise ignore the ] if value in cell is 0
+            # otherwise ignore the ] if value in tape is 0
         elif command == "+":
             # increment value of tape at head (wrap overflow)
             tape[head] = (tape[head] + 1) % 256
@@ -111,10 +111,10 @@ def main():
             # decrement value of tape at head (wrap underflow)
             tape[head] = (tape[head] - 1) % 256
         elif command == ">":
-            # move head to right cell, stay if that would move off tape
-            head += 1 if head + 1 < len(cell) else 0
+            # move head to right tape, stay if that would move off tape
+            head += 1 if head + 1 < len(tape) else 0
         elif command == "<":
-            # move head to left cell, stay if that would move off tape
+            # move head to left tape, stay if that would move off tape
             head -= 1 if head - 1 >= 0 else 0
         elif command == ",":
             # read 1 byte of input into current tape (as ordinal)
