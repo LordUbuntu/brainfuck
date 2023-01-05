@@ -11,6 +11,7 @@ def main():
     # BF symbols
     bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
 
+
     # read program from given file
     try:
         with open(argv[1], "r") as file:
@@ -22,6 +23,7 @@ def main():
         exit("no file was provided!")
     except FileNotFoundError:
         exit(f"file '{argv[1]}' could not be found!")
+
 
     # validate the program by ensuring no unmatched brackets
     bracket_symmetry = program.count('[') - program.count(']')
@@ -41,6 +43,7 @@ def main():
     if len(opening_indices) > 0:
         exit(f"ERR: orphan '[' (command {opening_indices.pop()+1})!")
     opening_bracket = {v: k for k, v in closing_bracket.items()}
+
 
     # run the program
     index = 0  # the index of the current command in the program
