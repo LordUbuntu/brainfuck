@@ -6,8 +6,8 @@ from functools import partial
 
 def main():
     # Turing Machine Emulator
-    cell = [0] * 30_000  # array of cells (the tape)
-    head = 0  # current cell (the head)
+    tape = [0] * 30_000  # array of tapes (the tape)
+    head = 0  # current tape (the head)
     # BF symbols
     bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
 
@@ -50,41 +50,41 @@ def main():
 
         # execute the current command in the program
         if command == "[":
-            # move ahead to nearest ] if value in cell is 0
-            if cell[head] == 0:
+            # move ahead to nearest ] if value in tape is 0
+            if tape[head] == 0:
                 index = closing_bracket[index]
         elif command == "]":
-            # move back to nearest [ if value in cell is not 0
-            if cell[head] != 0:
+            # move back to nearest [ if value in tape is not 0
+            if tape[head] != 0:
                 index = opening_bracket[index]
         elif command == "+":
-            # increment value of cell at head (wrap overflow)
-            cell[head] = (cell[head] + 1) % 256
+            # increment value of tape at head (wrap overflow)
+            tape[head] = (tape[head] + 1) % 256
         elif command == "-":
-            # decrement value of cell at head (wrap underflow)
-            cell[head] = (cell[head] - 1) % 256
+            # decrement value of tape at head (wrap underflow)
+            tape[head] = (tape[head] - 1) % 256
         elif command == ">":
-            # move head to next right cell, creating new cells if necessary
+            # move head to next right tape, creating new tapes if necessary
             head += 1
-            if head > len(cell):
-                cell.append(0)
+            if head > len(tape):
+                tape.append(0)
         elif command == "<":
-            # move head to next left cell, do nothing it already at leftmost
+            # move head to next left tape, do nothing it already at leftmost
             head -= 1
             if head < 0:
                 head = 0
         elif command == ",":
-            # read 1 byte of input into current cell (as ordinal)
+            # read 1 byte of input into current tape (as ordinal)
             line = stdin.readline()
             if len(line) == 0:
                 exit(0)
-            cell[head] = ord(line[0]) % 256
+            tape[head] = ord(line[0]) % 256
         elif command == ".":
-            # write 1 byte of output from current cell (as char)
-            stdout.write(chr(cell[head]))
+            # write 1 byte of output from current tape (as char)
+            stdout.write(chr(tape[head]))
         elif command == "#":
             # debug: show state of FSM
-            print(f"{head} {cell[:10]}")
+            print(f"{head} {tape[:10]}")
 
         # move to next command in sequence
         index += 1
