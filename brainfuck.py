@@ -11,6 +11,7 @@ def main():
     # Turing Machine Emulator
     tape = [0] * 30_000  # array of tapes (the tape)
     head = 0  # current tape (the head)
+
     # BF symbols
     bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
 
@@ -56,14 +57,53 @@ def main():
         command = program[index]
 
         # execute the current command in the program
-        if command == "[":
-            # move ahead to nearest ] if value in tape is 0
-            if tape[head] == 0:
-                index = closing_bracket[index]
+        if skip != 0:
+            # skip to a matching bracket
+            if skip == 1:
+                # start on the command following calling [
+                index += 1
+                # skip forwards to command after matching ]
+                depth = 1  # tracks matching brackets ([ = 1, ] = -1)
+                while depth > 0:
+                    command = program[index]
+                    if command == '[':
+                        depth += 1
+                    elif command == ']':
+                        depth -= 1
+                    index += 1
+                # end forward skip on command after ]
+                skip = 0
+                continue
+            if skip == -1:
+                # start on the command before the calling ]
+                index -= 1
+                # skip backwards to the command after matching [
+                depth = 1  # tracks matching brackets ([ = -1, ] = 1)
+                while depth > 0:
+                    # look at command ahead so we end on matching [
+                    command = program[index - 1]
+                    if command == '[':
+                        depth -= 1
+                    elif command == ']':
+                        depth += 1
+                    index -= 1
+                # move to command after matching [
+                index += 1
+                # end backward skip on command after [
+                skip = 0
+                continue
+        elif command == "[":
+            # move ahead to command after matching ] if value in cell is 0
+            if cell[head] == 0:
+                skip = 1
+                continue  # keeping index on the calling [
+            # otherwise ignore the [ if value in cell is not 0
         elif command == "]":
-            # move back to nearest [ if value in tape is not 0
-            if tape[head] != 0:
-                index = opening_bracket[index]
+            # move back to command after matching [ if value in cell is not 0
+            if cell[head] != 0:
+                skip = -1
+                continue  # keeping index on the calling ]
+            # otherwise ignore the ] if value in cell is 0
         elif command == "+":
             # increment value of tape at head (wrap overflow)
             tape[head] = (tape[head] + 1) % 256
