@@ -1,4 +1,7 @@
 #!/bin/python3.9
+# Jacobus Burger (2021)
+# BrainFuck interpreter written in Python
+#   For more info, see: https://en.wikipedia.org/wiki/Brainfuck
 from sys import argv, stdin, stdout, exit
 from operator import contains
 from functools import partial
@@ -47,6 +50,7 @@ def main():
 
     # run the program
     index = 0  # the index of the current command in the program
+    skip = 0  # used to determine if and in which direction to skip
     while index < len(program):
         # grab current command in program
         command = program[index]
