@@ -111,15 +111,11 @@ def main():
             # decrement value of tape at head (wrap underflow)
             tape[head] = (tape[head] - 1) % 256
         elif command == ">":
-            # move head to next right tape, creating new tapes if necessary
-            head += 1
-            if head > len(tape):
-                tape.append(0)
+            # move head to right cell, stay if that would move off tape
+            head += 1 if head + 1 < len(cell) else 0
         elif command == "<":
-            # move head to next left tape, do nothing it already at leftmost
-            head -= 1
-            if head < 0:
-                head = 0
+            # move head to left cell, stay if that would move off tape
+            head -= 1 if head - 1 >= 0 else 0
         elif command == ",":
             # read 1 byte of input into current tape (as ordinal)
             line = stdin.readline()
