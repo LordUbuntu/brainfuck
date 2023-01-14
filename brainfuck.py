@@ -1,40 +1,51 @@
 #!/bin/python3.9
 # Jacobus Burger (2021)
-# BrainFuck interpreter written in Python
-#   For more info, see: https://en.wikipedia.org/wiki/Brainfuck
+# Jacobus Burger (2021)
+# Info:
+#   BrainFuck interpreter written in Python.
+#   This implementation treats the input file as a program tape (think a
+#   punch card) and executes command symbols across that program tape, moving
+#   about it as the program is executed. The interpreter simultaneously
+#   emulates a turing tape that records the state of the program as it is
+#   being executed.
+# See:
+#   https://en.wikipedia.org/wiki/Brainfuck
+#   https://esolangs.org/wiki/Brainfuck
+#   https://www.youtube.com/watch?v=hdHjjBS4cs8
 from sys import argv, stdin, stdout, exit
 from operator import contains
 from functools import partial
 
 
 def main():
+    # valid BF symbols/commands
+    bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
     # Turing Machine Emulator
     tape = [0] * 30_000  # array of cells each holding an ascii value [0..255]
     head = 0  # current cell
-    # valid BF symbols/commands
-    bf_commands = ['+', '-', '<', '>', ',', '.', '[', ']', '#']
 
 
-    # read program from given file
+    # read file at path specified as first argument
     try:
         with open(argv[1], "r") as file:
             # filter file for recognized BF commands only
             bf_program_filter = partial(contains, bf_commands)
-            # NOTE: program is an array of BF symbols/commands
+            # NOTE: program is an array of BF symbols/commands (a program tape)
             program = list(filter(bf_program_filter, file.read()))
-    # handle potential exceptions
+    # handle potential exceptions from reading in program
     except IndexError:
         exit("no file was provided!")
     except FileNotFoundError:
         exit(f"file '{argv[1]}' could not be found!")
 
 
-    # validate the program by ensuring no unmatched brackets as precondition
+    # validate program by ensuring no unmatched brackets
     bracket_symmetry = program.count('[') - program.count(']')
     if program.count('[') - program.count('[') != 0:
         exit("ERR: unmatched '[' or ']' in program")
 
-    # run the program
+
+    # execute program tape
     index = 0  # the index of the current command in the program
     skip = 0  # used to determine if and in which direction to loop [ and ]
     while index < len(program):
@@ -44,8 +55,9 @@ def main():
         # execute the current command in the program
         if skip != 0:
             # skip to a matching bracket if skip is active
-            # what is depth and why are we using it?
-            #   the [ and ] skip algorithm is pretty straightforward. Treat
+            # NOTE:
+            #   What is depth and why are we using it?
+            #   The [ and ] skip algorithm is pretty straightforward. Treat
             #   all [ like a 1 and all ] like a -1, then adding the values of
             #   the matching pairs will give us 0 (1 - 1 == 0). This way we
             #   can ignore commands and nested [ and ] between the start [
@@ -115,16 +127,17 @@ def main():
             # read 1 byte of input into current tape (as ordinal)
             line = stdin.readline()
             if len(line) == 0:
-                exit(0)
-            tape[head] = ord(line[0]) % 256
+                tape[head] = 0  # default to 0 if input invalid
+            else:
+                tape[head] = ord(line[0]) % 256  # wraparound valid values
         elif command == ".":
-            # write 1 byte of output from current tape (as char)
+            # write 1 byte of output from current cell (as ascii char)
             stdout.write(chr(tape[head]))
         elif command == "#":
-            # debug: show state of FSM
+            # debug: show state of first 10 cells of tape
             print(f"{head} {tape[:10]}")
 
-        # move to next command in sequence
+        # move to next command in program tape
         index += 1
 
 
